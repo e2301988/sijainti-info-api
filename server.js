@@ -53,15 +53,38 @@ app.get("/location-info", async (req, res) => {
     const temperature = currentWeather.temperature_2m;
     const weatherCode = currentWeather.weather_code;
 
+    let description = "No description available";
+
+    if (city && city !== "Tuntematon kaupunki") {
+      const wikiTitle = encodeURIComponent(city);
+      const wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${wikiTitle}`;
+
+      try {
+        const wikiResponse = await fetch(wikiUrl);
+
+        if (wikiResponse.ok) {
+          const wikiData = await wikiResponse.json();
+
+          if (wikiData.extract) {
+            description = wikiData.extract;
+          }
+        }
+      } catch (wikiError) {
+        console.error("Virhe Wikipedian haussa:", wikiError);
+      }
+    }
+
     return res.json({
       city,
-      country,
       temperature,
-      weatherCode,
+      description,
       coordinates: {
         lat: Number(lat),
         lon: Number(lon),
       },
+
+      country,
+      weatherCode,
     });
   } catch (error) {
     console.error("Virhe /location-info -reitillä:", error);
@@ -70,6 +93,7 @@ app.get("/location-info", async (req, res) => {
     });
   }
 });
+
 
 
 app.listen(PORT, () => {
