@@ -4,7 +4,7 @@ const app = express();
 const PORT = 3000;
 
 app.get("/", (req, res) => {
-  res.send("Sijainti-info API toimii!");
+  res.send("Sijainti-info-API toimii!");
 });
 
 app.get("/location-info", async (req, res) => {
@@ -13,7 +13,8 @@ app.get("/location-info", async (req, res) => {
 
   if (!lat || !lon) {
     return res.status(400).json({
-      error: "Anna lat ja lon query-parametrit, esim. /location-info?lat=63.096&lon=21.616",
+      error:
+        "Anna lat ja lon query-parametrit, esim. /location-info?lat=63.096&lon=21.616",
     });
   }
 
@@ -38,9 +39,25 @@ app.get("/location-info", async (req, res) => {
 
     const country = address.country || "Tuntematon maa";
 
+    const openMeteoUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code`;
+
+    const weatherResponse = await fetch(openMeteoUrl);
+
+    if (!weatherResponse.ok) {
+      throw new Error("Open-Meteo-haku epäonnistui");
+    }
+
+    const weatherData = await weatherResponse.json();
+
+    const currentWeather = weatherData.current || {};
+    const temperature = currentWeather.temperature_2m;
+    const weatherCode = currentWeather.weather_code;
+
     return res.json({
       city,
       country,
+      temperature,
+      weatherCode,
       coordinates: {
         lat: Number(lat),
         lon: Number(lon),
