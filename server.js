@@ -18,9 +18,29 @@ app.get("/location-info", async (req, res) => {
   }
 
   try {
-    
+    const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`;
+
+    const nominatimResponse = await fetch(nominatimUrl);
+
+    if (!nominatimResponse.ok) {
+      throw new Error("Nominatim-haku epäonnistui");
+    }
+
+    const nominatimData = await nominatimResponse.json();
+
+    const address = nominatimData.address || {};
+    const city =
+      address.city ||
+      address.town ||
+      address.village ||
+      address.municipality ||
+      "Tuntematon kaupunki";
+
+    const country = address.country || "Tuntematon maa";
+
     return res.json({
-      message: "location-info reitti toimii",
+      city,
+      country,
       coordinates: {
         lat: Number(lat),
         lon: Number(lon),
